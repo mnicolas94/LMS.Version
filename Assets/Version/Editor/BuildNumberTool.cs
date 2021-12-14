@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -9,7 +9,7 @@ using Debug = UnityEngine.Debug;
 
 namespace LMS.Version
 {
-    public class BuildNumberTool : IPreprocessBuildWithReport
+    public class BuildNumberTool// : IPreprocessBuildWithReport
     {
         public int callbackOrder
         {
