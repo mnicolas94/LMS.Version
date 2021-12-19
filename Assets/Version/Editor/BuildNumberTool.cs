@@ -95,8 +95,18 @@ namespace LMS.Version
             {
                 int major = Int32.Parse(tokens[0]);
                 int minor = Int32.Parse(tokens[1]);
-                var patchTokens = tokens[2].Split('-');
-                int patch = Int32.Parse(patchTokens[0]);
+                string strPatch = tokens[2];
+                int patch;
+                if (strPatch.Contains('-'))
+                {
+                    var patchTokens = tokens[2].Split('-');
+                    patch = Int32.Parse(patchTokens[0]);
+                }
+                else
+                {
+                    patch = Int32.Parse(tokens[0]);
+                }
+                
                 return (major, minor, patch);
             }
             catch (Exception e)

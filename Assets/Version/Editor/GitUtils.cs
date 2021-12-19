@@ -61,7 +61,7 @@ namespace LMS.Version
         
         public static string GetLastTag()
         {
-            string gitCommand = "describe --tags --long --match v[0-9]*";
+            string gitCommand = "describe --tags --abbrev=0 --match v[0-9]*";
             var stdout = RunGitCommand(gitCommand);
             stdout = stdout.Trim();
             return stdout;
