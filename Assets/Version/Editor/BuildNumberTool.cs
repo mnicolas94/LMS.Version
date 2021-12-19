@@ -9,7 +9,7 @@ using Debug = UnityEngine.Debug;
 
 namespace LMS.Version
 {
-    public class BuildNumberTool// : IPreprocessBuildWithReport
+    public class BuildNumberTool : IPreprocessBuildWithReport
     {
         public int callbackOrder
         {
@@ -18,7 +18,54 @@ namespace LMS.Version
 
         public void OnPreprocessBuild(BuildReport report)
         {
-            // Find the version asset and increment its version number
+            var versionAsset = GetVersionAsset();
+            
+            // get version tag
+            try
+            {
+                var (major, minor, patch) = GetCurrentVersion();
+                versionAsset.GameVersion.Major = major;
+                versionAsset.GameVersion.Minor = minor;
+                versionAsset.GameVersion.Build = patch;
+            }
+            catch (Exception e)
+            {
+                throw new BuildFailedException($"Could not get version: {e}");
+            }
+            
+            versionAsset.Initialize();
+
+            // Push the version number into Unity's version field. Some console platforms really care about this!
+            // (for example, xbox games can fail cert if the version number isnt changed here)
+            PlayerSettings.bundleVersion = versionAsset.GameVersion.ToString();
+            PlayerSettings.macOS.buildNumber = versionAsset.GameVersion.ToString();
+
+            // get hash
+            try
+            {
+                string gitHash = GitUtils.GetGitCommitHash();
+                versionAsset.GitHash = gitHash;
+            }
+            catch (Exception e)
+            {
+                string errorMessage = $"Could not get commit hash: {e}";
+                throw new BuildFailedException(errorMessage);
+            }
+
+            versionAsset.BuildTimestamp = DateTime.UtcNow.ToString("yyyy MMMM dd - HH:mm");
+
+            // Save changes
+            EditorUtility.SetDirty(versionAsset);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            Debug.Log($"BuildNumberTool.OnPreprocessBuild: " +
+                      $"Storing version: {versionAsset.GameVersion}, " +
+                      $"commit hash: {versionAsset.GitHash} and " +
+                      $"timestamp: {versionAsset.BuildTimestamp}");
+        }
+        
+        private static Version GetVersionAsset(){
             var assets = AssetDatabase.FindAssets($"t:{typeof(Version).Name}");
             Version versionAsset = null;
 
@@ -36,71 +83,19 @@ namespace LMS.Version
                 versionAsset = AssetDatabase.LoadAssetAtPath<Version>(AssetDatabase.GUIDToAssetPath(assets[0]));
             }
 
-
-            var oldVersion = versionAsset.GameVersion.ToString();
-            if (versionAsset.IsAutoIncrementEnabled)
-            {
-                versionAsset.GameVersion.Build++;
-            }
-
-            versionAsset.Initialize();
-
-            // Push the version number into Unitys version field. Some console platforms really care about this!
-            // (for example, xbox games can fail cert if the version number isnt changed here)
-            PlayerSettings.bundleVersion = versionAsset.GameVersion.ToString();
-
-            // Call into Git
-            if (versionAsset.IsUpdateGitHashEnabled)
-            {
-                string gitHash = "00000000";
-                try
-                {
-                    gitHash = GetGitCommitHash();
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError("Could not call into git: " + e);
-                }
-
-                versionAsset.GitHash = gitHash;
-            }
-
-            versionAsset.BuildTimestamp = DateTime.UtcNow.ToString("yyyy MMMM dd - HH:mm");
-
-            // Save changes
-            EditorUtility.SetDirty(versionAsset);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-
-            Debug.Log($"BuildNumberTool.OnPreprocessBuild: Auto incrementing build number number. {oldVersion} -> {versionAsset.GameVersion}");
+            return versionAsset;
         }
 
-        private static string GetGitCommitHash()
+        private static (int, int, int) GetCurrentVersion()
         {
-            // example of how to hardcode the git path, if its not in your system PATH.
-            // #if UNITY_EDITOR_WIN
-            //         const string gitPath = "C:\\Program Files\\Git\\bin\\git.exe";
-            // #endif
-            const string gitPath = "git";
-            var gitInfo = new ProcessStartInfo
-            {
-                CreateNoWindow = true,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-                FileName = gitPath,
-                UseShellExecute = false,
-            };
+            var lastTag = GitUtils.GetLastTag();
+            var trimmedTag = lastTag.TrimStart('v');
+            var tokens = trimmedTag.Split('.');
+            int major = Int32.Parse(tokens[0]);
+            int minor = Int32.Parse(tokens[1]);
+            int patch = Int32.Parse(tokens[2]);
 
-            var gitProcess = new Process();
-            gitInfo.Arguments = "rev-parse --short HEAD"; // magic command to get the current commit hash
-            gitInfo.WorkingDirectory = Directory.GetCurrentDirectory();
-            gitProcess.StartInfo = gitInfo;
-            gitProcess.Start();
-            var stdout = gitProcess.StandardOutput.ReadToEnd();
-            gitProcess.WaitForExit();
-            gitProcess.Close();
-            stdout = stdout.Trim();
-            return stdout;
+            return (major, minor, patch);
         }
     }
 }
