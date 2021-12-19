@@ -91,11 +91,18 @@ namespace LMS.Version
             var lastTag = GitUtils.GetLastTag();
             var trimmedTag = lastTag.TrimStart('v');
             var tokens = trimmedTag.Split('.');
-            int major = Int32.Parse(tokens[0]);
-            int minor = Int32.Parse(tokens[1]);
-            int patch = Int32.Parse(tokens[2]);
-
-            return (major, minor, patch);
+            try
+            {
+                int major = Int32.Parse(tokens[0]);
+                int minor = Int32.Parse(tokens[1]);
+                var patchTokens = tokens[2].Split('-');
+                int patch = Int32.Parse(patchTokens[0]);
+                return (major, minor, patch);
+            }
+            catch (Exception e)
+            {
+                throw new BuildFailedException($"Error parsing git tag: {lastTag}");
+            }
         }
     }
 }
