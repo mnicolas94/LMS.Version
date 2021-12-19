@@ -1,13 +1,13 @@
 {
-	"name": "com.lms.version",
-	"displayName": "Lotte's Versioning System",
-	"description": "A SUPER simple auto build version tool",
-	"version": "1.0.0",
+	"name": "com.lms.version_mand",
+	"displayName": "Lotte's Versioning System (changed a bit by Miguel Nicolás-Díaz)",
+	"description": "A SUPER simple auto build version tool. This is a forked version from https://github.com/LotteMakesStuff/LMS.Version",
+	"version": "1.0.1",
 	"unity": "2018.3",
 	"license": "MIT",
-	"licensesUrl": "https://github.com/LotteMakesStuff/LMS.Version/blob/main/LICENSE",
-	"changelogUrl": "https://github.com/LotteMakesStuff/LMS.Version/commits/upm",
-	"documentationUrl": "https://github.com/LotteMakesStuff/LMS.Version",
+	"licensesUrl": "https://github.com/mnicolas94/LMS.Version/blob/main/LICENSE",
+	"changelogUrl": "https://github.com/mnicolas94/LMS.Version/commits/upm",
+	"documentationUrl": "https://github.com/mnicolas94/LMS.Version",
 	"dependencies": {
  	},
 	"author": {
