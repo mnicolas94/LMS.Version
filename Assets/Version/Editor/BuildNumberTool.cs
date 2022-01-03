@@ -104,7 +104,7 @@ namespace LMS.Version
                 }
                 else
                 {
-                    patch = Int32.Parse(tokens[0]);
+                    patch = Int32.Parse(tokens[2]);
                 }
                 
                 return (major, minor, patch);
